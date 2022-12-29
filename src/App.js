@@ -10,6 +10,7 @@ function App() {
     password: "",
   });
   const [isLogged, setIsLogged] = useState(false);
+  const [session, setSession] = useState(null);
   const [isReset, setIsReset] = useState(false);
   const [isUpdate, setIsUpdate] = useState(false);
   const [isLogin, setisLogin] = useState(true);
@@ -72,20 +73,9 @@ function App() {
   };
 
   const resetPassword = async () => {
-    console.log(token, "token");
-    const a = await axios["post"](
-      "http://localhost:3000/v1/auth/reset-password",
-      {
-        newPassword: newPassword,
-        resetPasswordToken: token,
-      }
-    );
-    console.log(a.data, "resetPassword");
+    const { data, error } = await supabase.auth.updateUser({password: newPassword});
 
-    // const { error } = await supabase.auth.updateUser({
-    //   token,
-    //   password: newPassword,
-    // });
+    return data;
   };
 
   const logOut = async () => {
@@ -101,6 +91,16 @@ function App() {
   };
 
   useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        setLoggedInUser(session?.user ?? null);
+        setToken(session?.access_token)
+        console.log(session, "session");
+        console.log(event, "event");
+      }
+    );
+
     setIsLogged(
       loggedInUser &&
         loggedInUser.user &&
